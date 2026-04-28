@@ -5,7 +5,7 @@ const Listing = require("./models/listing.js");
 const path = require("path");
 const methodoverride = require("method-override")
 const ejsMate = require("ejs-mate");
-const ExpressError = require("./utils/expresserror.js");
+const ExpressError = require("./utils/ExpressError.js");
 const wrapAsync = require("./utils/wrapAsync.js");
 const MONGO_URL = "mongodb://127.0.0.1:27017/wonderlust";
 
@@ -38,8 +38,8 @@ app.get("/listings", wrapAsync(async (req, res) => {
   res.render("listings/index", { allListings });
 }));
 
-// New Route — must come before Show Route
-app.get("/listings/new", wrapAsyncasync((req, res) => {
+
+app.get("/listings/new", wrapAsync(async (req, res) => {
   res.render("listings/new");
 }));
 
