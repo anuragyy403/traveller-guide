@@ -22,10 +22,12 @@ const listingSchema = new Schema ({
     location: String,
     country: String,
 
-    reviews: {
+    reviews: [
+      {
       type : Schema.Types.ObjectId,
       ref: "Review",
-    }
+    },
+  ],
 });
 
 
