@@ -6,6 +6,7 @@ const path = require("path");
 const methodoverride = require("method-override")
 const ejsMate = require("ejs-mate");
 const MONGO_URL = "mongodb://127.0.0.1:27017/wonderlust";
+const Review = require("./models/review.js");
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -81,6 +82,20 @@ app.delete("/listings/:id", async (req,res) => {
   console.log(deletedListing);
   res.redirect("/listings");
 });
+
+//Reviews Route
+app.post("/listings/:id/reviews", async (req,res) => {
+  let listing = await Listing.findById(req.params.id);
+  let newReview = new Review(req.body.review);
+  
+  listing.reviews.push(newReview);
+
+  await newReview.save();
+  await listing.save();
+
+  console.log("new review saved");
+  res.redirect(`/listings/${listing._id}`);
+})
 
 
 app.use((err,req,res,next) => {
