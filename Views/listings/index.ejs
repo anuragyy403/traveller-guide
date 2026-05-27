@@ -5,7 +5,7 @@
 <div class="row">
   <% for(let listing of allListings) { %>
     <a href="/listings/<%= listing._id%>" class="listing-link">
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4 mb-4 listing-card" >
       <div class="card h-100">
         <img 
         src="<%= listing.image.url %>" 

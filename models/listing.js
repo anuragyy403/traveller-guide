@@ -30,6 +30,12 @@ const listingSchema = new Schema ({
   ],
 });
 
+listingSchema.post("findOneAndDelete", asysnc (listing) => {
+  if (listing) {
+    await Reveiw.deleteMany({_id: { $in: listing.reveiws}});
+  }
+});
+
 
 
 const Listing = mongoose.model("Listing", listingSchema)

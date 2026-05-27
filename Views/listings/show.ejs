@@ -6,7 +6,7 @@
 <body>
     <h3>Listing Detail:</h3>
 
-<div class="card" style="width: 18rem;">
+<div class="card" style="width: 18rem; listing-card">
   <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="listing_image">
   <div class="card-body">
     <p class="card-text">
@@ -37,20 +37,37 @@
         Leave a review
     </h4>
     <br>
-    <form action="/listings/<%= listing._id %>/reviews" method="POST">
+    <form action="/listings/<%= listing._id %>/reviews" method="POST" novalidate class = "needs-validation">
         <div class = "mb-3 mt-3">
         <label for = "rating" class= "form-label">Rating</label>
-        <input type = "range" min = "1" max = "5" id = "rating" name ="review[RATING]" CLASS = "FORM-CONTROL"/>
+        <input type = "range" min = "1" max = "5" id = "rating" name ="review[rating]" CLASS = "FORM-CONTROL"/>
         </div>
         <div>
             <label for = "comment">Comments</label>
-            <textarea name ="review[comment]" id="comment" cols="30" rows ="5" CLASS = "form-control"></textarea>
+            <textarea name ="review[comment]" id="comment" cols="30" rows ="5" CLASS = "form-control" required></textarea>
+            <div class = "invalid-feedback">
+                Please submit some somecomments for review
+            </div>
         </div>
         <button class = "btn btn-outline-dark">Submit</button>
-    
     </form>
+    <hr/>
 
+    <h4>All Reviews</h4>
+
+<div class = "row>"    
+<% for (review of listing.reviews) { %>
+    <div class ="card col-6 mb-3">
+        <div class = "card-body">
+            <h5 class = "card-title">Jane Doe</h5>
+            <p class = "card-text"><%= review.comment %></p>
+            <p class = "card-text"><%= review.rating %></p>
+        </div>
+        <form class="mb-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+            <button class = "btn btn-sm btn-dark"> Delete</button>
+        </form>
+    </div>
+  <% } %>
 </div>
-
-
+</div>
 </div>

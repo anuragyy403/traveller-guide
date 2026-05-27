@@ -45,7 +45,7 @@ app.get("/listings/new", async (req, res) => {
 // Show Route
 app.get("/listings/:id", async (req, res) => {
   let { id } = req.params;
-  const listing = await Listing.findById(id);
+  const listing = await Listing.findById(id).populate("reviews");
   res.render("listings/show", { listing });
 });
 
@@ -96,6 +96,16 @@ app.post("/listings/:id/reviews", async (req,res) => {
   console.log("new review saved");
   res.redirect(`/listings/${listing._id}`);
 })
+
+//Delete Review Route
+app.delete("/listings/:id/reviews/:reviewId", async (req, res) => {
+  let { id, reviewId } = req.params;
+
+  await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+  await Review.findByIdAndDelete(reviewId);
+
+  res.redirect(`/listings/${id}`);
+});
 
 
 app.use((err,req,res,next) => {
