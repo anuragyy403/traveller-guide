@@ -9,6 +9,10 @@ const MONGO_URL = "mongodb://127.0.0.1:27017/wonderlust";
 const Review = require("./models/review.js");
 const session = require("express-session");
 const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js");
+const { isLoggedIn } = require("./middleware.js");
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -42,11 +46,37 @@ const sessionOptions = {
 
 app.use(session(sessionOptions));
 app.use(flash());
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
+});
+
 app.use((req,res,next) => {
   res.locals.success = req.flash("success");
   next();
 });
 
+app.get("/demouser", async (req, res) => {
+  let fakeUser = new User({
+    email: "student@gmail.com",
+    username: "delta-student",
+  });
+
+  let registeredUser = await User.register(fakeUser, "helloworld");
+  res.send(registeredUser);
+});
+
+
+ 
 app.get("/", (req,res) =>{
   res.send("Home Page");
 });
@@ -57,20 +87,21 @@ app.get("/listings", async (req, res) => {
   res.render("listings/index", { allListings });
 });
 
-
-app.get("/listings/new", async (req, res) => {
+//newroute
+app.get("/listings/new", isLoggedIn, async (req, res) => {
+  console.log(req.user);
   res.render("listings/new");
 });
 
 // Show Route
-app.get("/listings/:id", async (req, res) => {
+app.get("/listings/:id", isLoggedIn,async (req, res) => {
   let { id } = req.params;
   const listing = await Listing.findById(id).populate("reviews");
   res.render("listings/show", { listing });
 });
 
 // Create Route
-app.post("/listings", async (req,res,next) => {
+app.post("/listings", isLoggedIn, async (req,res,next) => {
   try{
     const newListing = new Listing(req.body.listing);
   await newListing.save();
@@ -83,21 +114,21 @@ app.post("/listings", async (req,res,next) => {
 
 
 //Edit route
-app.get("/listings/:id/edit", async(req,res) => {
+app.get("/listings/:id/edit", isLoggedIn, async(req,res) => {
    let { id } = req.params;
   const listing = await Listing.findById(id);
   res.render("listings/edit.ejs", {listing});
 });
 
 //Update Route
-app.put("/listings/:id", async(req,res) => {
+app.put("/listings/:id", isLoggedIn, async(req,res) => {
   let {id} = req.params;
   await Listing.findByIdAndUpdate(id, {...req.body.listing});
   res.redirect(`/listings/${id}`);
 });
 
 //Delete Route
-app.delete("/listings/:id", async (req,res) => {
+app.delete("/listings/:id", isLoggedIn, async (req,res) => {
   let {id} = req.params;
   let deletedListing = await Listing.findByIdAndDelete(id);
   console.log(deletedListing);
@@ -105,7 +136,7 @@ app.delete("/listings/:id", async (req,res) => {
 });
 
 //Reviews Route
-app.post("/listings/:id/reviews", async (req,res) => {
+app.post("/listings/:id/reviews", isLoggedIn, async (req,res) => {
   let listing = await Listing.findById(req.params.id);
   let newReview = new Review(req.body.review);
   
@@ -119,7 +150,7 @@ app.post("/listings/:id/reviews", async (req,res) => {
 })
 
 //Delete Review Route
-app.delete("/listings/:id/reviews/:reviewId", async (req, res) => {
+app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
   let { id, reviewId } = req.params;
 
   await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
@@ -128,6 +159,52 @@ app.delete("/listings/:id/reviews/:reviewId", async (req, res) => {
   res.redirect(`/listings/${id}`);
 });
 
+//User Handling Routes
+app.get("/signup", (req,res) => {
+  res.render("users/signup.ejs");
+})
+
+//Post route for user signup
+
+app.post("/signup", async(req,res) => {
+  try {
+    let {username,email,password} = req.body;
+    const newUser = new User ({ email,username});
+    const registeredUser = await User.register(newUser, password);
+    console.log(registeredUser);
+    req.flash("success", "Welcome to Wonderlust!");
+    res.redirect("/listings");
+  } catch(e){
+    req.flash("error", e.message);
+    res.redirect("/signup");
+  }
+});
+
+//login route
+
+app.get("/login", (req,res) => {
+  res.render("users/login.ejs");
+})
+
+//login post route
+
+app.post("/login", 
+  passport.authenticate("local", { failureFlash: true, failureRedirect: "/login" }), 
+  async (req, res) => {
+    req.flash("success", "Welcome to Wonderlust, You are logged in");
+    res.redirect("/listings");
+})
+
+//log out route
+app.get("/logout", (req, res, next) => {
+  req.logout((err) => {
+    if(err) {
+      return next(err);
+    }
+    req.flash("success","you are logged out !");
+    res.redirect("/listings");
+  })
+})
 
 app.use((err,req,res,next) => {
   let{statusCode=500, message="Something went wrong"} = err
