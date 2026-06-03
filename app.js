@@ -12,7 +12,7 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const { isLoggedIn } = require("./middleware.js");
+const { isLoggedIn, saveRedirectURL, isOwner, isreviewAuthor } = require("./middleware.js");
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -95,9 +95,16 @@ app.get("/listings/new", isLoggedIn, async (req, res) => {
 });
 
 // Show Route
-app.get("/listings/:id", isLoggedIn,async (req, res) => {
+app.get("/listings/:id", async (req, res) => {
   let { id } = req.params;
-  const listing = await Listing.findById(id).populate("reviews");
+  const listing = await Listing.findById(id)
+  .populate({
+    path:"reviews",
+    populate: {
+      path:"author",
+    },
+    })
+  .populate("owner", "username");
   res.render("listings/show", { listing });
 });
 
@@ -105,6 +112,7 @@ app.get("/listings/:id", isLoggedIn,async (req, res) => {
 app.post("/listings", isLoggedIn, async (req,res,next) => {
   try{
     const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id;
   await newListing.save();
   req.flash("success", "New Listing created");
   res.redirect("/listings");
@@ -115,21 +123,21 @@ app.post("/listings", isLoggedIn, async (req,res,next) => {
 
 
 //Edit route
-app.get("/listings/:id/edit", isLoggedIn, async(req,res) => {
+app.get("/listings/:id/edit", isLoggedIn, isOwner, async(req,res) => {
    let { id } = req.params;
   const listing = await Listing.findById(id);
   res.render("listings/edit.ejs", {listing});
 });
 
 //Update Route
-app.put("/listings/:id", isLoggedIn, async(req,res) => {
+app.put("/listings/:id", isLoggedIn, isOwner, async(req,res) => {
   let {id} = req.params;
   await Listing.findByIdAndUpdate(id, {...req.body.listing});
   res.redirect(`/listings/${id}`);
 });
 
 //Delete Route
-app.delete("/listings/:id", isLoggedIn, async (req,res) => {
+app.delete("/listings/:id", isLoggedIn, isOwner, async (req,res) => {
   let {id} = req.params;
   let deletedListing = await Listing.findByIdAndDelete(id);
   console.log(deletedListing);
@@ -142,6 +150,7 @@ app.post("/listings/:id/reviews", isLoggedIn, async (req,res) => {
   let newReview = new Review(req.body.review);
   
   listing.reviews.push(newReview);
+  newReview.author = req.user._id;
 
   await newReview.save();
   await listing.save();
@@ -151,7 +160,7 @@ app.post("/listings/:id/reviews", isLoggedIn, async (req,res) => {
 })
 
 //Delete Review Route
-app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
+app.delete("/listings/:id/reviews/:reviewId", isLoggedIn,isreviewAuthor, async (req, res) => {
   let { id, reviewId } = req.params;
 
   await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
@@ -195,11 +204,13 @@ app.get("/login", (req,res) => {
 
 //login post route
 
-app.post("/login", 
+app.post("/login",
+  saveRedirectURL,
   passport.authenticate("local", { failureFlash: true, failureRedirect: "/login" }), 
   async (req, res) => {
     req.flash("success", "Welcome to Wonderlust, You are logged in");
-    res.redirect("/listings");
+    let redirectURL = res.locals.redirectURL || "/listings";
+    res.redirect(redirectURL);
 })
 
 //log out route
