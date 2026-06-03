@@ -57,6 +57,7 @@ passport.deserializeUser(User.deserializeUser());
 app.use((req, res, next) => {
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
+  res.locals.currUser = req.user;
   next();
 });
 
@@ -172,8 +173,14 @@ app.post("/signup", async(req,res) => {
     const newUser = new User ({ email,username});
     const registeredUser = await User.register(newUser, password);
     console.log(registeredUser);
-    req.flash("success", "Welcome to Wonderlust!");
-    res.redirect("/listings");
+    req.login(registeredUser, (err) =>{
+      if(err) {
+        return next(err);
+      }
+      req.flash("success", "Welcome to Wonderlust!");
+      res.redirect("/listings");
+    })
+    
   } catch(e){
     req.flash("error", e.message);
     res.redirect("/signup");
