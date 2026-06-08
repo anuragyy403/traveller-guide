@@ -34,15 +34,6 @@ module.exports.isOwner = async (req, res, next) => {
   next();
 };
 
-module.exports.isOwner = async(req,res,next) => {
-  let {id} = req.params;
-  let listing = await Listing.findById(id);
-  if(!listing.owner_id.equals(currUser._id)) {
-    req.flash("error", "You are not the owner of this listing");
-    res.redirect(`/listings/${id}`);
-  }
-}
-
 module.exports.isreviewAuthor = async (req, res, next) => {
   let { id, reviewId } = req.params;
 
