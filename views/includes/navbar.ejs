@@ -1,26 +1,23 @@
 <style>
   .btn-search {
-    background-color: red;
+    background-color: #fe424d;
     color: white;
     border-radius: 25px;
-    padding:0 1rem 0 1rem;
+    padding: 0.5rem 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
   }
   .btn-search:hover {
-    background-color: red;
+    background-color: #e03943;
     color: white;
-  }
-  .btn-search i {
-    display: inline;
-    margin-right: 0.5rem;
   }
 </style>
 
-
-
-
 <nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/listings"><i class="fa-regular fa-compass"></i></a>
+    <a class="navbar-brand" href="/listings" style="color: #fe424d; font-weight: 700; font-size: 1.4rem;">Wanderlust</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -31,24 +28,26 @@
       </div>
 
       <div class="navbar-nav ms-auto">
-        <form class="d-flex" role="search">
+        <form class="d-flex align-items-center" role="search">
           <input
            class="form-control me-2"
            type="search"
-           placeholder="Search Destinations" aria-label="Search"/>
-          <button class="btn btn-search" type="submit"> Search
-            <i class="fa-solid fa-magnifying-glass"></i>
+           placeholder="Search Destinations" aria-label="Search"
+           style="border-radius: 25px; padding: 0.5rem 1rem;"/>
+          <button class="btn btn-search" type="submit">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
           </button>
         </form>
       </div> 
 
-        <a class="nav-link" href="/listings/new">AirBnb Your Home</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link mx-2" href="/listings/new">AirBnb Your Home</a>
         <% if(!currUser) { %>
-          <a class="nav-link" href="/signup"><b>Sign Up</b></a>
-          <a class="nav-link" href="/login"><b>Log in</b></a>
+          <a class="nav-link mx-2" href="/signup"><b>Sign Up</b></a>
+          <a class="nav-link mx-2" href="/login"><b>Log in</b></a>
           <% } %>
             <% if(currUser) { %>
-              <a class="nav-link" href="/logout">Log out</a>
+              <a class="nav-link mx-2" href="/logout">Log out</a>
               <% } %>
       </div>
     </div>
